@@ -25,7 +25,7 @@ class Agent:
 
         self.model = Sequential()
         self.model.add(Dense(64, input_dim = input_dim , activation = 'relu'))
-        self.model.add(Dense(512, activation = 'relu'))
+        self.model.add(Dense(32, activation = 'relu'))
         self.model.add(Dense(n_actions, activation = 'linear'))
         self.model.compile(optimizer=adam_v2.Adam(), loss = 'mse')
 
@@ -47,13 +47,17 @@ class Agent:
             actions = [m['action'] for m in episode]
             rewards = [m['reward'] for m in episode]
 
-            estimated_total_reward = self.model.predict(states)
+            estimated_reward = self.model.predict(states)
+            last = len(states) - 1
+            target_reward = -1 if last < target else 1
 
-            for i, (state, action) in enumerate(zip(states, actions)):
-                estimated_total_reward[i][action] = self.calc_rewards(rewards[i:])
+            for i in range(len(states)):
+                action = actions[last - i]
+                target_reward = rewards[last - i] + gamma * target_reward
+                estimated_reward[last - i][action] = target_reward
 
             all_states.append(states)
-            all_rewards.append(estimated_total_reward)
+            all_rewards.append(estimated_reward)
 
         all_states = np.concatenate([state for state in all_states])
         all_rewards = np.concatenate([reward for reward in all_rewards])
@@ -71,7 +75,7 @@ class Agent:
         return action
 
 
-n_episodes = 200
+n_episodes = 300
 gamma = 0.9
 epsilon = 1
 
@@ -105,7 +109,7 @@ for n in range(n_episodes):
 
         # Decrease epsilon - we will make less and less random actions
         if epsilon > 0.01:
-            epsilon -= 0.01
+            epsilon -= 0.001
 
         result += 1
 
@@ -118,6 +122,7 @@ for n in range(n_episodes):
     max_result = max(max_result, result)
     print(f'Result: {result}, Max Result: {max_result}')
 
-# TODO: make sure we get good reward for the last steps
-plt.plot(results_diagram)
-plt.show()
+    if n>0 and n % 30 == 0:
+        # TODO: make sure we get good reward for the last steps
+        plt.plot(results_diagram)
+        plt.show()
