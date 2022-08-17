@@ -1,0 +1,4 @@
+pyglet
+gym[atari,accept-rom-license]==0.21.0
+autorom[accept-rom-license]
+stable-baselines3[extra]

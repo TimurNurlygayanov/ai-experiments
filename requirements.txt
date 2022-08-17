@@ -1,4 +1,7 @@
 gym
 catboost
 torch
-
+keras
+matplotlib
+numpy
+pandas

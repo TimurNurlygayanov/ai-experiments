@@ -5,9 +5,9 @@ from catboost import CatBoostClassifier
 env = gym.make('CartPole-v0')
 target = 500  # maximum number of iterations
 
-model = CatBoostClassifier(iterations=5,
-                           learning_rate=0.01,
-                           depth=2)
+model = CatBoostClassifier(iterations=10,
+                           learning_rate=0.02,
+                           depth=5)
 
 max_result_total = 0
 train_data = []
@@ -24,7 +24,8 @@ for epoch in range(1000):
 
     steps_total = 0
     while not done:
-        env.render()
+        if steps_total > 200:
+            env.render()
 
         if epoch < 100:
             action = env.action_space.sample()  # choose random action
@@ -42,7 +43,7 @@ for epoch in range(1000):
     # Teach classifier (all steps are good, but last steps are bad):
     wrong_steps = 0 if steps_total == target else 4
     if steps_total < max_result_total:
-        wrong_steps = max(4, steps_total//2)
+        wrong_steps = max(4, steps_total//3)
 
     # Teach on positive results:
     for i, state in enumerate(states[:-wrong_steps]):
@@ -55,6 +56,6 @@ for epoch in range(1000):
         train_labels.append(abs(actions[-wrong_steps + i] - 1))  # choose opposite action
 
     if len(set(train_labels)) > 1:
-        model.fit(train_data, train_labels)
+        model.fit(train_data, train_labels, verbose=False)
 
     print(epoch, steps_total, max_result_total)
